@@ -1,0 +1,27 @@
+{
+  "name": "queueless",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=24.0.0" },
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "npm run build -w @queueless/shared && concurrently -n api,web -c cyan,green \"npm run dev -w @queueless/api\" \"npm run dev -w @queueless/web\"",
+    "dev:lan": "node scripts/dev-lan.mjs",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run prisma:migrate -w @queueless/api",
+    "db:seed": "npm run prisma:seed -w @queueless/api",
+    "setup:local": "npm run setup:local -w @queueless/api",
+    "demo:reset": "npm run demo:reset -w @queueless/api",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run build -w @queueless/shared && npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "playwright test",
+    "build": "npm run build -w @queueless/shared && npm run build -w @queueless/api && npm run build -w @queueless/web"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3"
+  }
+}

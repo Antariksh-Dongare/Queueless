@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.env.test
+playwright-report
+test-results
+coverage
+apps/api/prisma/dev.db

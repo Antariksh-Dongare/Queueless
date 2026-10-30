@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  STAFF
+  ADMIN
+}
+enum QueueStatus {
+  OPEN
+  CLOSED
+  PAUSED
+}
+enum TokenStatus {
+  WAITING
+  CHECKIN_REQUIRED
+  CHECKED_IN
+  CALLED
+  SERVING
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+  SKIPPED
+}
+enum AuditActor {
+  STUDENT
+  STAFF
+  ADMIN
+  SYSTEM
+}
+enum CheckInResult {
+  SUCCESS
+  EXPIRED
+  INVALID_SIGNATURE
+  WRONG_SERVICE
+  OUT_OF_WINDOW
+  DUPLICATE
+  NOT_ELIGIBLE
+}
+
+model RoleRecord {
+  id String @id @default(uuid())
+  name Role @unique
+  description String
+  users User[]
+  @@map("roles")
+}
+model User {
+  id String @id @default(uuid())
+  name String
+  email String @unique
+  passwordHash String @map("password_hash")
+  roleName Role @map("role_name")
+  role RoleRecord @relation(fields: [roleName], references: [name])
+  active Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  staffProfile Staff?
+  sessions UserSession[]
+  tokens Token[]
+  checkIns CheckIn[] @relation("CheckInStudent")
+  @@map("users")
+}
+model UserSession {
+  id String @id
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([userId, expiresAt])
+  @@map("user_sessions")
+}
+model Staff {
+  id String @id @default(uuid())
+  userId String @unique @map("user_id")
+  designation String?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments StaffService[]
+  @@map("staff")
+}
+model Location {
+  id String @id @default(uuid())
+  name String
+  building String
+  floor String
+  description String?
+  active Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  services Service[]
+  @@map("locations")
+}
+model Service {
+  id String @id @default(uuid())
+  locationId String @map("location_id")
+  name String
+  code String @unique
+  description String
+  averageMinutes Int @map("average_minutes")
+  active Boolean @default(true)
+  checkinLeadMinutes Int @default(10) @map("checkin_lead_minutes")
+  checkinLeadTokens Int @default(3) @map("checkin_lead_tokens")
+  checkinGraceMinutes Int @default(5) @map("checkin_grace_minutes")
+  location Location @relation(fields: [locationId], references: [id])
+  queues Queue[]
+  assignments StaffService[]
+  qrCodes QrCode[]
+  @@index([locationId, active])
+  @@map("services")
+}
+model StaffService {
+  id String @id @default(uuid())
+  staffId String @map("staff_id")
+  serviceId String @map("service_id")
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  @@unique([staffId, serviceId])
+  @@map("staff_services")
+}
+model Queue {
+  id String @id @default(uuid())
+  serviceId String @map("service_id")
+  sessionKey String @map("session_key")
+  status QueueStatus @default(OPEN)
+  nextSequence Int @default(1) @map("next_sequence")
+  createdAt DateTime @default(now()) @map("created_at")
+  openedAt DateTime? @map("opened_at")
+  closedAt DateTime? @map("closed_at")
+  service Service @relation(fields: [serviceId], references: [id])
+  tokens Token[]
+  qrCodes QrCode[]
+  sessionHistory QueueSessionHistory[]
+  @@unique([serviceId, sessionKey])
+  @@index([serviceId, status])
+  @@map("queues")
+}
+model QueueSessionHistory {
+  id String @id @default(uuid())
+  queueId String @map("queue_id")
+  actorId String? @map("actor_id")
+  actorType AuditActor @map("actor_type")
+  action String
+  reason String?
+  createdAt DateTime @default(now()) @map("created_at")
+  queue Queue @relation(fields: [queueId], references: [id], onDelete: Restrict)
+  @@index([queueId, createdAt])
+  @@map("queue_session_history")
+}
+model Token {
+  id String @id @default(uuid())
+  queueId String @map("queue_id")
+  userId String @map("user_id")
+  sequence Int
+  displayToken String @map("display_token")
+  status TokenStatus @default(WAITING)
+  joinedAt DateTime @default(now()) @map("joined_at")
+  checkinOpenedAt DateTime? @map("checkin_opened_at")
+  checkinDeadlineAt DateTime? @map("checkin_deadline_at")
+  checkedInAt DateTime? @map("checked_in_at")
+  calledAt DateTime? @map("called_at")
+  startedAt DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  reason String?
+  queue Queue @relation(fields: [queueId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  checkIns CheckIn[]
+  history QueueHistory[]
+  @@unique([queueId, sequence])
+  @@index([queueId, status, sequence])
+  @@index([userId, status])
+  @@map("tokens")
+}
+model QrCode {
+  id String @id @default(uuid())
+  serviceId String @map("service_id")
+  queueId String @map("queue_id")
+  jtiHash String @unique @map("jti_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  service Service @relation(fields: [serviceId], references: [id])
+  queue Queue @relation(fields: [queueId], references: [id])
+  checkIns CheckIn[]
+  @@index([serviceId, expiresAt])
+  @@map("qr_codes")
+}
+model CheckIn {
+  id String @id @default(uuid())
+  tokenId String? @map("token_id")
+  userId String @map("user_id")
+  qrCodeId String? @map("qr_code_id")
+  result CheckInResult
+  reason String?
+  attemptedAt DateTime @default(now()) @map("attempted_at")
+  token Token? @relation(fields: [tokenId], references: [id])
+  user User @relation("CheckInStudent", fields: [userId], references: [id])
+  qrCode QrCode? @relation(fields: [qrCodeId], references: [id])
+  @@index([userId, attemptedAt])
+  @@index([tokenId, result])
+  @@map("check_ins")
+}
+model QueueHistory {
+  id String @id @default(uuid())
+  tokenId String @map("token_id")
+  actorId String? @map("actor_id")
+  actorType AuditActor @map("actor_type")
+  fromStatus TokenStatus? @map("from_status")
+  toStatus TokenStatus? @map("to_status")
+  action String
+  reason String?
+  createdAt DateTime @default(now()) @map("created_at")
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  @@index([tokenId, createdAt])
+  @@map("queue_history")
+}

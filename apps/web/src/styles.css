@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme { --color-ink: #17202b; --color-muted: #657180; --color-line: #e5e9ef; --color-surface: #ffffff; --color-canvas: #f7f8fa; --color-teal: #176b65; --color-teal-deep: #10534f; --color-amber: #9a6408; --color-red: #a63535; --color-green: #27715a; }
+@layer base {
+  * { box-sizing: border-box; }
+  html { background: #f7f8fa; color: #17202b; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  body { min-width: 320px; margin: 0; }
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid color-mix(in srgb, #176b65 35%, white); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+}
+@layer components {
+  .shell { @apply mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8; }
+  .card { @apply rounded-[10px] border border-line bg-white shadow-[0_1px_2px_rgba(23,32,43,.025)]; }
+  .btn { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-transparent px-4 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-45; }
+  .btn-primary { @apply bg-teal text-white hover:bg-teal-deep; }
+  .btn-secondary { @apply border-line bg-white text-ink hover:bg-canvas; }
+  .btn-danger { @apply border-red/20 bg-red/5 text-red hover:bg-red/10; }
+  .eyebrow { @apply text-[11px] font-bold uppercase tracking-[.14em] text-muted; }
+  .field { @apply mt-1.5 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink placeholder:text-muted/70 focus:border-teal; }
+  .status { @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold tracking-[.04em]; }
+}

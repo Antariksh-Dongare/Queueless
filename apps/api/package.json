@@ -1,0 +1,52 @@
+{
+  "name": "@queueless/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pretest": "prisma generate",
+    "dev": "tsx watch src/index.ts",
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "lint": "eslint src --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:seed": "tsx src/seed.ts",
+    "setup:local": "tsx src/scripts/setup-local.ts",
+    "demo:reset": "tsx src/scripts/demo-reset.ts"
+  },
+  "prisma": {
+    "seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.1.0",
+    "@prisma/client": "7.1.0",
+    "@queueless/shared": "*",
+    "argon2": "^0.44.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.10.0",
+    "@types/pg": "^8.15.5",
+    "@types/qrcode": "^1.5.5",
+    "eslint": "^9.39.1",
+    "prisma": "7.1.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3",
+    "vitest": "^4.0.14"
+  }
+}
